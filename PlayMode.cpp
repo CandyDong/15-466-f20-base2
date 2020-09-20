@@ -9,18 +9,20 @@
 #include "data_path.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/string_cast.hpp>
+#include <glm/ext.hpp>
 
 #include <random>
 
 GLuint hexapod_meshes_for_lit_color_texture_program = 0;
 Load< MeshBuffer > hexapod_meshes(LoadTagDefault, []() -> MeshBuffer const * {
-	MeshBuffer const *ret = new MeshBuffer(data_path("hexapod.pnct"));
+	MeshBuffer const *ret = new MeshBuffer(data_path("brunch.pnct"));
 	hexapod_meshes_for_lit_color_texture_program = ret->make_vao_for_program(lit_color_texture_program->program);
 	return ret;
 });
 
 Load< Scene > hexapod_scene(LoadTagDefault, []() -> Scene const * {
-	return new Scene(data_path("hexapod.scene"), [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name){
+	return new Scene(data_path("brunch.scene"), [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name){
 		Mesh const &mesh = hexapod_meshes->lookup(mesh_name);
 
 		scene.drawables.emplace_back(transform);
@@ -39,17 +41,79 @@ Load< Scene > hexapod_scene(LoadTagDefault, []() -> Scene const * {
 PlayMode::PlayMode() : scene(*hexapod_scene) {
 	//get pointers to leg for convenience:
 	for (auto &transform : scene.transforms) {
-		if (transform.name == "Hip.FL") hip = &transform;
-		else if (transform.name == "UpperLeg.FL") upper_leg = &transform;
-		else if (transform.name == "LowerLeg.FL") lower_leg = &transform;
+		std::cout << transform.name << std::endl;
+		if (transform.name == "bacon") {
+			bacon = &transform;
+			scene_transforms.emplace_back("bacon", bacon);
+			scene_base_positions.emplace_back("bacon", (&transform)->position);
+		}
+		else if (transform.name == "bacon.001") {
+			bacon1 = &transform;
+			scene_transforms.emplace_back("bacon1", bacon1);
+			scene_base_positions.emplace_back("bacon1", (&transform)->position);
+		}
+		else if (transform.name == "bacon.002") {
+			bacon2 = &transform;
+			scene_transforms.emplace_back("bacon2", bacon2);
+			scene_base_positions.emplace_back("bacon2", (&transform)->position);
+		}
+		else if (transform.name == "cake") {
+			cake = &transform;
+			scene_transforms.emplace_back("cake", cake);
+			scene_base_positions.emplace_back("cake", (&transform)->position);
+		}
+		else if (transform.name == "sandwich") {
+			sandwich = &transform;
+			scene_transforms.emplace_back("sandwich", sandwich);
+			scene_base_positions.emplace_back("sandwich", (&transform)->position);
+		}
+		else if (transform.name == "pancakes") {
+			pancakes = &transform;
+			scene_transforms.emplace_back("pancakes", pancakes);
+			scene_base_positions.emplace_back("pancakes", (&transform)->position);
+		}
+		else if (transform.name == "cactus") {
+			cactus = &transform;
+			scene_transforms.emplace_back("cactus", cactus);
+			scene_base_positions.emplace_back("cactus", (&transform)->position);
+		}
+		else if (transform.name == "egg") {
+			egg = &transform;
+			scene_transforms.emplace_back("egg", egg);
+			scene_base_positions.emplace_back("egg", (&transform)->position);
+		}
+		else if (transform.name == "egg.001") {
+			egg1 = &transform;
+			scene_transforms.emplace_back("egg1", egg1);
+			scene_base_positions.emplace_back("egg1", (&transform)->position);
+		}
+		else if (transform.name == "egg.002") {
+			egg2 = &transform;
+			scene_transforms.emplace_back("egg2", egg2);
+			scene_base_positions.emplace_back("egg2", (&transform)->position);
+		}
 	}
-	if (hip == nullptr) throw std::runtime_error("Hip not found.");
-	if (upper_leg == nullptr) throw std::runtime_error("Upper leg not found.");
-	if (lower_leg == nullptr) throw std::runtime_error("Lower leg not found.");
+	if (bacon == nullptr) throw std::runtime_error("bacon not found.");
+	if (bacon1 == nullptr) throw std::runtime_error("bacon1 not found.");
+	if (bacon2 == nullptr) throw std::runtime_error("bacon2 not found.");
+	if (cake == nullptr) throw std::runtime_error("cake not found.");
+	if (sandwich == nullptr) throw std::runtime_error("sandwich not found.");
+	if (pancakes == nullptr) throw std::runtime_error("pancakes not found.");
+	if (cactus == nullptr) throw std::runtime_error("cactus not found.");
+	if (egg == nullptr) throw std::runtime_error("egg not found.");
+	if (egg1 == nullptr) throw std::runtime_error("egg1 not found.");
+	if (egg2 == nullptr) throw std::runtime_error("egg2 not found.");
 
-	hip_base_rotation = hip->rotation;
-	upper_leg_base_rotation = upper_leg->rotation;
-	lower_leg_base_rotation = lower_leg->rotation;
+	// bacon_base_rotation = bacon->rotation;
+	// cake_base_rotation = cake->rotation;
+	// sandwich_base_rotation = sandwich->rotation;
+
+	// bacon_base_position = bacon->position;
+	// cake_base_position = cake->position;
+	// sandwich_base_position = sandwich->position;
+	// pancakes_base_position = pancakes->position;
+	// cactus_base_position = cactus->position;
+	// egg_base_position = egg->position;
 
 	//get pointer to camera for convenience:
 	if (scene.cameras.size() != 1) throw std::runtime_error("Expecting scene to have exactly one camera, but it has " + std::to_string(scene.cameras.size()));
@@ -60,7 +124,7 @@ PlayMode::~PlayMode() {
 }
 
 bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
-
+	
 	if (evt.type == SDL_KEYDOWN) {
 		if (evt.key.keysym.sym == SDLK_ESCAPE) {
 			SDL_SetRelativeMouseMode(SDL_FALSE);
@@ -81,6 +145,11 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			down.downs += 1;
 			down.pressed = true;
 			return true;
+		} else if (evt.key.keysym.sym == SDLK_p) {
+			pick = true;
+			// std::cout << "x: " + std::to_string(mousepicker.screen_x) + "y: " + 
+			// 			std::to_string(mousepicker.screen_y) << std::endl;
+			return true;
 		}
 	} else if (evt.type == SDL_KEYUP) {
 		if (evt.key.keysym.sym == SDLK_a) {
@@ -94,6 +163,9 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_s) {
 			down.pressed = false;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_p) {
+			pick = false;
 			return true;
 		}
 	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
@@ -113,6 +185,9 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 				* glm::angleAxis(motion.y * camera->fovy, glm::vec3(1.0f, 0.0f, 0.0f))
 			);
 			return true;
+		} else if (pick) {
+			std::cout << "mouse motion while the p key is pressed" << std::endl;
+			return true;
 		}
 	}
 
@@ -120,23 +195,29 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 }
 
 void PlayMode::update(float elapsed) {
-
 	//slowly rotates through [0,1):
 	wobble += elapsed / 10.0f;
 	wobble -= std::floor(wobble);
 
-	hip->rotation = hip_base_rotation * glm::angleAxis(
-		glm::radians(5.0f * std::sin(wobble * 2.0f * float(M_PI))),
-		glm::vec3(0.0f, 1.0f, 0.0f)
-	);
-	upper_leg->rotation = upper_leg_base_rotation * glm::angleAxis(
-		glm::radians(7.0f * std::sin(wobble * 2.0f * 2.0f * float(M_PI))),
-		glm::vec3(0.0f, 0.0f, 1.0f)
-	);
-	lower_leg->rotation = lower_leg_base_rotation * glm::angleAxis(
-		glm::radians(10.0f * std::sin(wobble * 3.0f * 2.0f * float(M_PI))),
-		glm::vec3(0.0f, 0.0f, 1.0f)
-	);
+	// bacon->rotation = bacon_base_rotation * glm::angleAxis(
+	// 	glm::radians(5.0f * std::sin(wobble * 2.0f * float(M_PI))),
+	// 	glm::vec3(0.0f, 1.0f, 0.0f)
+	// );
+	// cake->rotation = cake_base_rotation * glm::angleAxis(
+	// 	glm::radians(7.0f * std::sin(wobble * 2.0f * 2.0f * float(M_PI))),
+	// 	glm::vec3(0.0f, 0.0f, 1.0f)
+	// );
+	// sandwich->rotation = sandwich_base_rotation * glm::angleAxis(
+	// 	glm::radians(10.0f * std::sin(wobble * 3.0f * 2.0f * float(M_PI))),
+	// 	glm::vec3(0.0f, 0.0f, 1.0f)
+	// );
+
+	//move cake
+	{
+		std::cout << "current selected: " + std::get<0>(scene_base_positions[selected]) << std::endl;
+		Scene::Transform* currentTransform = std::get<1>(scene_transforms[selected]);
+		currentTransform->position = std::get<1>(scene_base_positions[selected]) + glm::vec3(0.0f, 10.f, 0.0f);
+	}
 
 	//move camera:
 	{
