@@ -41,56 +41,64 @@ Load< Scene > hexapod_scene(LoadTagDefault, []() -> Scene const * {
 PlayMode::PlayMode() : scene(*hexapod_scene) {
 	//get pointers to leg for convenience:
 	for (auto &transform : scene.transforms) {
-		std::cout << transform.name << std::endl;
+		// std::cout << transform.name << std::endl;
 		if (transform.name == "bacon") {
 			bacon = &transform;
-			scene_transforms.emplace_back("bacon", bacon);
-			scene_base_positions.emplace_back("bacon", (&transform)->position);
+			objects.emplace_back("bacon");
+			scene_transforms.emplace_back(bacon);
+			scene_base_positions.emplace_back(bacon->position);
 		}
 		else if (transform.name == "bacon.001") {
 			bacon1 = &transform;
-			scene_transforms.emplace_back("bacon1", bacon1);
-			scene_base_positions.emplace_back("bacon1", (&transform)->position);
+			objects.emplace_back("bacon.001");
+			scene_transforms.emplace_back(bacon1);
+			scene_base_positions.emplace_back(bacon1->position);
 		}
 		else if (transform.name == "bacon.002") {
 			bacon2 = &transform;
-			scene_transforms.emplace_back("bacon2", bacon2);
-			scene_base_positions.emplace_back("bacon2", (&transform)->position);
+			objects.emplace_back("bacon.002");
+			scene_transforms.emplace_back(bacon2);
+			scene_base_positions.emplace_back(bacon2->position);
 		}
 		else if (transform.name == "cake") {
 			cake = &transform;
-			scene_transforms.emplace_back("cake", cake);
-			scene_base_positions.emplace_back("cake", (&transform)->position);
+			objects.emplace_back("cake");
+			scene_transforms.emplace_back(cake);
+			scene_base_positions.emplace_back(cake->position);
 		}
 		else if (transform.name == "sandwich") {
 			sandwich = &transform;
-			scene_transforms.emplace_back("sandwich", sandwich);
-			scene_base_positions.emplace_back("sandwich", (&transform)->position);
+			objects.emplace_back("sandwich");
+			scene_transforms.emplace_back(sandwich);
+			scene_base_positions.emplace_back(sandwich->position);
 		}
 		else if (transform.name == "pancakes") {
 			pancakes = &transform;
-			scene_transforms.emplace_back("pancakes", pancakes);
-			scene_base_positions.emplace_back("pancakes", (&transform)->position);
-		}
-		else if (transform.name == "cactus") {
-			cactus = &transform;
-			scene_transforms.emplace_back("cactus", cactus);
-			scene_base_positions.emplace_back("cactus", (&transform)->position);
+			objects.emplace_back("pancakes");
+			scene_transforms.emplace_back(pancakes);
+			scene_base_positions.emplace_back(pancakes->position);
 		}
 		else if (transform.name == "egg") {
 			egg = &transform;
-			scene_transforms.emplace_back("egg", egg);
-			scene_base_positions.emplace_back("egg", (&transform)->position);
+			objects.emplace_back("egg");
+			scene_transforms.emplace_back(egg);
+			scene_base_positions.emplace_back(egg->position);
 		}
 		else if (transform.name == "egg.001") {
 			egg1 = &transform;
-			scene_transforms.emplace_back("egg1", egg1);
-			scene_base_positions.emplace_back("egg1", (&transform)->position);
+			objects.emplace_back("egg.001");
+			scene_transforms.emplace_back(egg1);
+			scene_base_positions.emplace_back(egg1->position);
 		}
 		else if (transform.name == "egg.002") {
 			egg2 = &transform;
-			scene_transforms.emplace_back("egg2", egg2);
-			scene_base_positions.emplace_back("egg2", (&transform)->position);
+			objects.emplace_back("egg.002");
+			scene_transforms.emplace_back(egg2);
+			scene_base_positions.emplace_back(egg2->position);
+		} 
+		else if (transform.name == "table") {
+			table = &transform;
+			table_base_position = (&transform)->position;
 		}
 	}
 	if (bacon == nullptr) throw std::runtime_error("bacon not found.");
@@ -99,10 +107,10 @@ PlayMode::PlayMode() : scene(*hexapod_scene) {
 	if (cake == nullptr) throw std::runtime_error("cake not found.");
 	if (sandwich == nullptr) throw std::runtime_error("sandwich not found.");
 	if (pancakes == nullptr) throw std::runtime_error("pancakes not found.");
-	if (cactus == nullptr) throw std::runtime_error("cactus not found.");
 	if (egg == nullptr) throw std::runtime_error("egg not found.");
 	if (egg1 == nullptr) throw std::runtime_error("egg1 not found.");
 	if (egg2 == nullptr) throw std::runtime_error("egg2 not found.");
+	if (table == nullptr) throw std::runtime_error("table not found.");
 
 	// bacon_base_rotation = bacon->rotation;
 	// cake_base_rotation = cake->rotation;
@@ -129,14 +137,6 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		if (evt.key.keysym.sym == SDLK_ESCAPE) {
 			SDL_SetRelativeMouseMode(SDL_FALSE);
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_a) {
-			left.downs += 1;
-			left.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_d) {
-			right.downs += 1;
-			right.pressed = true;
-			return true;
 		} else if (evt.key.keysym.sym == SDLK_w) {
 			up.downs += 1;
 			up.pressed = true;
@@ -145,12 +145,22 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			down.downs += 1;
 			down.pressed = true;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_p) {
-			pick = true;
-			// std::cout << "x: " + std::to_string(mousepicker.screen_x) + "y: " + 
-			// 			std::to_string(mousepicker.screen_y) << std::endl;
+		} else if (evt.key.keysym.sym == SDLK_m) {
+			light_on = false;
 			return true;
-		}
+		} else if (evt.key.keysym.sym == SDLK_LEFT) {
+			if (selected > 0) {
+				selected -= 1;
+			} else {
+				selected = scene_transforms.size()-1;
+			}
+		} else if (evt.key.keysym.sym == SDLK_RIGHT) {
+			if (selected < scene_transforms.size()) {
+				selected += 1;
+			} else {
+				selected = 0;
+			}
+		} 
 	} else if (evt.type == SDL_KEYUP) {
 		if (evt.key.keysym.sym == SDLK_a) {
 			left.pressed = false;
@@ -164,40 +174,31 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		} else if (evt.key.keysym.sym == SDLK_s) {
 			down.pressed = false;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_p) {
-			pick = false;
+		} else if (evt.key.keysym.sym == SDLK_m) {
+			light_on = true;
 			return true;
 		}
-	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
-		if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
-			SDL_SetRelativeMouseMode(SDL_TRUE);
-			return true;
-		}
-	} else if (evt.type == SDL_MOUSEMOTION) {
-		if (SDL_GetRelativeMouseMode() == SDL_TRUE) {
-			glm::vec2 motion = glm::vec2(
-				evt.motion.xrel / float(window_size.y),
-				-evt.motion.yrel / float(window_size.y)
-			);
-			camera->transform->rotation = glm::normalize(
-				camera->transform->rotation
-				* glm::angleAxis(-motion.x * camera->fovy, glm::vec3(0.0f, 1.0f, 0.0f))
-				* glm::angleAxis(motion.y * camera->fovy, glm::vec3(1.0f, 0.0f, 0.0f))
-			);
-			return true;
-		} else if (pick) {
-			std::cout << "mouse motion while the p key is pressed" << std::endl;
-			return true;
-		}
-	}
+	} 
 
 	return false;
 }
 
 void PlayMode::update(float elapsed) {
+	if (game_over) {
+		light_on = false;
+		return;
+	}
 	//slowly rotates through [0,1):
 	wobble += elapsed / 10.0f;
 	wobble -= std::floor(wobble);
+
+	if (light_toggle > 0.0f && light_toggle - elapsed < 0.0f) {
+		light_on = !light_on;
+		light_toggle = 3.0f;
+		// scene.drawables.erase(scene.drawables.begin());
+	} else {
+		light_toggle -= elapsed;
+	}
 
 	// bacon->rotation = bacon_base_rotation * glm::angleAxis(
 	// 	glm::radians(5.0f * std::sin(wobble * 2.0f * float(M_PI))),
@@ -211,39 +212,67 @@ void PlayMode::update(float elapsed) {
 	// 	glm::radians(10.0f * std::sin(wobble * 3.0f * 2.0f * float(M_PI))),
 	// 	glm::vec3(0.0f, 0.0f, 1.0f)
 	// );
-
-	//move cake
-	{
-		std::cout << "current selected: " + std::get<0>(scene_base_positions[selected]) << std::endl;
-		Scene::Transform* currentTransform = std::get<1>(scene_transforms[selected]);
-		currentTransform->position = std::get<1>(scene_base_positions[selected]) + glm::vec3(0.0f, 10.f, 0.0f);
+	if (!light_on) {
+		for (int i = 0; i < scene_transforms.size(); i++) {
+			if (scene_transforms[i]->position != scene_base_positions[i]) {
+				std::cout << objects[i] << std::endl;
+				game_over = true;
+				light_on = false;
+				std::cout << "game over" << std::endl;
+				return;
+			}
+		}
+		return;
 	}
+	//move selected object
+	if (up.pressed) {
+		(scene_transforms[selected])->position += glm::vec3(0.0f, 1.0f, 0.0f);
+		
+		if ((scene_transforms[selected])->position.y >= 50.0f) {
+			for (auto itr = scene.drawables.begin(); itr != scene.drawables.end(); itr++) {
+				std::string name = itr->transform->name;
+				if (objects[selected] == name) {
+					scene.drawables.erase(itr);
+				}
+			}
+
+			scene_transforms.erase(scene_transforms.begin()+selected);
+			objects.erase(objects.begin()+selected);
+			scene_base_positions.erase(scene_base_positions.begin()+selected);
+			selected = 0;
+			return;
+		}
+	} else if (down.pressed) {
+		(scene_transforms[selected])->position -= glm::vec3(0.0f, 1.0f, 0.0f);
+		if (((scene_transforms[selected])->position).y < scene_base_positions[selected].y) {
+			(scene_transforms[selected])->position = scene_base_positions[selected];
+		} 
+	}
+	
 
 	//move camera:
 	{
 
 		//combine inputs into a move:
-		constexpr float PlayerSpeed = 30.0f;
-		glm::vec2 move = glm::vec2(0.0f);
-		if (left.pressed && !right.pressed) move.x =-1.0f;
-		if (!left.pressed && right.pressed) move.x = 1.0f;
-		if (down.pressed && !up.pressed) move.y =-1.0f;
-		if (!down.pressed && up.pressed) move.y = 1.0f;
+		// constexpr float PlayerSpeed = 30.0f;
+		// glm::vec2 move = glm::vec2(0.0f);
+		// if (left.pressed && !right.pressed) move.x =-1.0f;
+		// if (!left.pressed && right.pressed) move.x = 1.0f;
+		// if (down.pressed && !up.pressed) move.y =-1.0f;
+		// if (!down.pressed && up.pressed) move.y = 1.0f;
 
 		//make it so that moving diagonally doesn't go faster:
-		if (move != glm::vec2(0.0f)) move = glm::normalize(move) * PlayerSpeed * elapsed;
+		// if (move != glm::vec2(0.0f)) move = glm::normalize(move) * PlayerSpeed * elapsed;
 
-		glm::mat4x3 frame = camera->transform->make_local_to_parent();
-		glm::vec3 right = frame[0];
-		//glm::vec3 up = frame[1];
-		glm::vec3 forward = -frame[2];
+		// glm::mat4x3 frame = camera->transform->make_local_to_parent();
+		// glm::vec3 right = frame[0];
+		// //glm::vec3 up = frame[1];
+		// glm::vec3 forward = -frame[2];
 
-		camera->transform->position += move.x * right + move.y * forward;
+		// camera->transform->position += move.x * right + move.y * forward;
 	}
 
 	//reset button press counters:
-	left.downs = 0;
-	right.downs = 0;
 	up.downs = 0;
 	down.downs = 0;
 }
@@ -259,7 +288,12 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	GL_ERRORS();
 	glUniform3fv(lit_color_texture_program->LIGHT_DIRECTION_vec3, 1, glm::value_ptr(glm::vec3(0.0f, 0.0f,-1.0f)));
 	GL_ERRORS();
-	glUniform3fv(lit_color_texture_program->LIGHT_ENERGY_vec3, 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 0.95f)));
+	if (!light_on) {
+		glUniform3fv(lit_color_texture_program->LIGHT_ENERGY_vec3, 1, glm::value_ptr(glm::vec3(0.2f, 0.2f, 0.2f)));
+	} else {
+		glUniform3fv(lit_color_texture_program->LIGHT_ENERGY_vec3, 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 0.95f)));
+	}
+	
 	GL_ERRORS();
 	glUseProgram(0);
 
@@ -281,15 +315,37 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			0.0f, 0.0f, 1.0f, 0.0f,
 			0.0f, 0.0f, 0.0f, 1.0f
 		));
-
 		constexpr float H = 0.09f;
-		lines.draw_text("Mouse motion rotates camera; WASD moves; escape ungrabs mouse",
+		float ofs = 2.0f / drawable_size.y;
+
+		if (game_over) {
+			//print game over text
+			lines.draw_text("You are caught! Game over!",
+			glm::vec3(-0.5f + 0.1f * H,0.0f, 0.0),
+			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+			glm::u8vec4(0xff, 0x00, 0x00, 0x00));
+		lines.draw_text("You are caught! Game over!",
+			glm::vec3(-0.5f + 0.1f * H + ofs, ofs, 0.0),
+			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+		}
+
+		
+		lines.draw_text("Left/Right arrow to select food; WASD moves selected food.",
 			glm::vec3(-aspect + 0.1f * H, -1.0 + 0.1f * H, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0x00, 0x00, 0x00, 0x00));
-		float ofs = 2.0f / drawable_size.y;
-		lines.draw_text("Mouse motion rotates camera; WASD moves; escape ungrabs mouse",
-			glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + + 0.1f * H + ofs, 0.0),
+		lines.draw_text("Left/Right arrow to select food; WASD moves selected food.",
+			glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + 0.1f * H + ofs, 0.0),
+			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+		//print selected object
+		lines.draw_text("Current Selection: " + objects[selected],
+			glm::vec3(-aspect + 0.1f*H, 1.0 - H, 0.0f),
+			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+			glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+		lines.draw_text("Current Selection: " + objects[selected],
+			glm::vec3(-aspect + 0.1f*H + ofs, 1.0 - H + ofs, 0.0f),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 	}

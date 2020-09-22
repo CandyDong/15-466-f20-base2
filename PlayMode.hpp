@@ -27,8 +27,11 @@ struct PlayMode : Mode {
 		uint8_t pressed = 0;
 	} left, right, down, up;
 
-	bool pick = false;
+	bool game_over = false;
+	bool light_on = true;
 	int8_t selected = 0;
+
+	float light_toggle = 3.0f;
 
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
@@ -41,6 +44,7 @@ struct PlayMode : Mode {
 	// glm::quat upper_leg_base_rotation;
 	// glm::quat lower_leg_base_rotation;
 	// float wobble = 0.0f;
+	std::vector<std::string> objects = {};
 
 	//brunch
 	Scene::Transform *bacon = nullptr;
@@ -48,11 +52,11 @@ struct PlayMode : Mode {
 	Scene::Transform *bacon2 = nullptr;
 	Scene::Transform *cake = nullptr;
 	Scene::Transform *sandwich = nullptr;
-	Scene::Transform *cactus = nullptr;
 	Scene::Transform *egg = nullptr;
 	Scene::Transform *egg1 = nullptr;
 	Scene::Transform *egg2 = nullptr;
 	Scene::Transform *pancakes = nullptr;
+	Scene::Transform *table = nullptr;
 	// glm::quat bacon_base_rotation;
 	// glm::quat cake_base_rotation;
 	// glm::quat sandwich_base_rotation;
@@ -62,8 +66,9 @@ struct PlayMode : Mode {
 	// glm::vec3 cactus_base_position;
 	// glm::vec3 egg_base_position;
 	// glm::vec3 pancakes_base_position;
-	std::vector<std::tuple<std::string, Scene::Transform*>> scene_transforms;
-	std::vector<std::tuple<std::string, glm::vec3>> scene_base_positions;
+	std::vector<Scene::Transform*> scene_transforms;
+	std::vector<glm::vec3> scene_base_positions;
+	glm::vec3 table_base_position;
 
 	float wobble = 0.0f;
 	
