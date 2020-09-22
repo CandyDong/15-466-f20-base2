@@ -145,9 +145,6 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			down.downs += 1;
 			down.pressed = true;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_m) {
-			light_on = false;
-			return true;
 		} else if (evt.key.keysym.sym == SDLK_LEFT) {
 			if (selected > 0) {
 				selected -= 1;
@@ -174,10 +171,7 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		} else if (evt.key.keysym.sym == SDLK_s) {
 			down.pressed = false;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_m) {
-			light_on = true;
-			return true;
-		}
+		} 
 	} 
 
 	return false;
@@ -185,7 +179,7 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 
 void PlayMode::update(float elapsed) {
 	if (game_over) {
-		light_on = false;
+		light_on = true;
 		return;
 	}
 	//slowly rotates through [0,1):
@@ -194,31 +188,17 @@ void PlayMode::update(float elapsed) {
 
 	if (light_toggle > 0.0f && light_toggle - elapsed < 0.0f) {
 		light_on = !light_on;
-		light_toggle = 3.0f;
+		light_toggle = 2.0f;
 		// scene.drawables.erase(scene.drawables.begin());
 	} else {
 		light_toggle -= elapsed;
 	}
 
-	// bacon->rotation = bacon_base_rotation * glm::angleAxis(
-	// 	glm::radians(5.0f * std::sin(wobble * 2.0f * float(M_PI))),
-	// 	glm::vec3(0.0f, 1.0f, 0.0f)
-	// );
-	// cake->rotation = cake_base_rotation * glm::angleAxis(
-	// 	glm::radians(7.0f * std::sin(wobble * 2.0f * 2.0f * float(M_PI))),
-	// 	glm::vec3(0.0f, 0.0f, 1.0f)
-	// );
-	// sandwich->rotation = sandwich_base_rotation * glm::angleAxis(
-	// 	glm::radians(10.0f * std::sin(wobble * 3.0f * 2.0f * float(M_PI))),
-	// 	glm::vec3(0.0f, 0.0f, 1.0f)
-	// );
-	if (!light_on) {
+	if (light_on) {
 		for (int i = 0; i < scene_transforms.size(); i++) {
 			if (scene_transforms[i]->position != scene_base_positions[i]) {
-				std::cout << objects[i] << std::endl;
 				game_over = true;
-				light_on = false;
-				std::cout << "game over" << std::endl;
+				light_on = true;
 				return;
 			}
 		}
@@ -240,6 +220,10 @@ void PlayMode::update(float elapsed) {
 			objects.erase(objects.begin()+selected);
 			scene_base_positions.erase(scene_base_positions.begin()+selected);
 			selected = 0;
+
+			if (objects.size() == 0) {
+				success = true;
+			}
 			return;
 		}
 	} else if (down.pressed) {
@@ -324,7 +308,18 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			glm::vec3(-0.5f + 0.1f * H,0.0f, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0xff, 0x00, 0x00, 0x00));
-		lines.draw_text("You are caught! Game over!",
+			lines.draw_text("You are caught! Game over!",
+			glm::vec3(-0.5f + 0.1f * H + ofs, ofs, 0.0),
+			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+		}
+		if (success) {
+			// print success text
+			lines.draw_text("Success!!",
+			glm::vec3(-0.5f + 0.1f * H,0.0f, 0.0),
+			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+			glm::u8vec4(0xff, 0x00, 0x00, 0x00));
+			lines.draw_text("Success!!",
 			glm::vec3(-0.5f + 0.1f * H + ofs, ofs, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0xff, 0xff, 0xff, 0x00));

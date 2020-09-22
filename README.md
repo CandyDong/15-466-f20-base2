@@ -1,18 +1,18 @@
-# (TODO: your game's title)
+# Hungry Man
 
-Author: (TODO: your name)
+Author: qingyid
 
-Design: (TODO: In two sentences or fewer, describe what is new and interesting about your game.)
+Design: feed the hungry man by stealing food when the light is off. When the light is on, the hostress catches the food stealer if he is half way through stealing the food.
 
 Screen Shot:
 
 ![Screen Shot](screenshot.png)
 
 How To Play:
+Left/Right arrow: change selected food on the table
+W/S: move food up or down; use W to steal the food; use S to get the food back to it's place before the light is switched on.
 
-(TODO: describe the controls and (if needed) goals/strategy.)
-
-Sources: (TODO: list a source URL for any assets you did not create yourself. Make sure you have a license for the asset.)
+Sources: source blender file provided with the base code.
 
 This game was built with [NEST](NEST.md).
 

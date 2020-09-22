@@ -28,10 +28,11 @@ struct PlayMode : Mode {
 	} left, right, down, up;
 
 	bool game_over = false;
+	bool success = false;
 	bool light_on = true;
 	int8_t selected = 0;
 
-	float light_toggle = 3.0f;
+	float light_toggle = 2.0f;
 
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
